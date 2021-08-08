@@ -1,0 +1,43 @@
+version: '3'
+services:
+    reverseproxy:
+        build: ./configProxy
+        ports:
+            - 8181:8181
+
+    postgres:
+        image: postgres:latest
+        container_name: postgresPractica
+        ports:
+          - "5432:5432"
+        environment:
+            - LC_ALL=C.UTF-8
+            - POSTGRES_DB=astronet
+            - POSTGRES_USER=postgres
+            - POSTGRES_PASSWORD=12345
+            - POSTGRES_PORT=5432
+        volumes:
+            - $PWD/input_files/import-postgres.sql:/docker-entrypoint-initdb.d/import-postgres.sql
+    wildfly:
+        image: wildflyimagepractica
+        container_name: wildflyPractica
+        build: .
+        ports:
+            - "8080:8080"
+            - "9990:9990"
+        environment:
+            - DB_HOST=postgres
+            - DB_PORT=5432
+            - DB_NAME=astronet
+            - DB_USER=postgres
+            - DB_PASS=12345
+            - DS_NAME:pedro
+            - JNDI_NAME=java:/pedro
+        depends_on:
+            - postgres
+            - reverseproxy
+        volumes:
+            - jboss-volume:/opt/jboss/wildfly/standalone/deployments
+
+volumes:
+    jboss-volume: {}
